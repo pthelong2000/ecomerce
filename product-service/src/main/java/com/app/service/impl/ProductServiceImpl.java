@@ -8,8 +8,10 @@ import com.app.repository.ProductRepository;
 import com.app.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
@@ -36,5 +38,18 @@ public class ProductServiceImpl implements ProductService {
                         .quantity(product.getQuantity())
                         .build())
                 .orElseThrow(() -> new ProductServiceException(String.format("Product with given id: %s not found", productId)));
+    }
+
+    @Override
+    public void reduceQuantity(long productId, long quantity) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductServiceException(String.format("Product with given id: %s not found", productId)));
+
+        if (product.getQuantity() < quantity) {
+            throw new ProductServiceException("Product does not have sufficient quantity");
+        }
+
+        product.setQuantity(product.getQuantity() - quantity);
+        productRepository.save(product);
     }
 }
